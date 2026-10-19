@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaxContact AI Co-Pilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .editable:hover { outline: 2px dashed #a855f7; background: rgba(168, 85, 247, 0.2); cursor: text; border-radius: 4px; }
+        .editable:focus { outline: 2px solid #a855f7; background: rgba(168, 85, 247, 0.3); }
+        @keyframes strobe { 0%, 100% { background-color: #7f1d1d; color: white; } 50% { background-color: #ef4444; color: black; } }
+        @keyframes pulse-border { 0%, 100% { border-color: #ef4444; box-shadow: 0 0 15px #ef4444; } 50% { border-color: #991b1b; box-shadow: 0 0 5px #991b1b; } }
+        .fullscreen-alert { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: strobe 0.3s infinite; text-align: center; }
+        .dramatic-box { animation: pulse-border 1s infinite; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans h-screen flex flex-col overflow-hidden">
+
+    <!-- CRITICAL FULLSCREEN COMPLIANCE TAKEOVER -->
+    <div id="complianceOverlay" class="hidden fullscreen-alert">
+        <i class="fa-solid fa-triangle-exclamation text-[150px] mb-4"></i>
+        <h1 class="text-[8vw] leading-none uppercase font-black">Say Now:</h1>
+        <h2 class="text-[5vw] mt-4 uppercase font-bold">"Calls are recorded"</h2>
+        <p class="text-3xl mt-8 font-bold">Compliance timer expired. Acknowledge to continue.</p>
+    </div>
+
+    <!-- MASSIVE RENEWAL ALERT -->
+    <div id="renewalAlert" class="hidden fixed inset-0 z-[9990] bg-black/80 flex items-center justify-center p-4">
+        <div class="bg-amber-500 text-slate-950 p-10 rounded-3xl text-center animate-bounce border-8 border-yellow-300 shadow-[0_0_100px_rgba(251,191,36,1)] max-w-3xl w-full">
+            <i class="fa-solid fa-file-contract text-7xl mb-4"></i>
+            <h1 class="text-5xl font-black uppercase tracking-tight">Capture Renewal Date!</h1>
+            <p class="text-2xl mt-4 font-bold">The customer mentioned they are currently in a contract.</p>
+            <button onclick="document.getElementById('renewalAlert').classList.add('hidden')" class="mt-8 bg-slate-950 text-amber-400 px-10 py-4 text-2xl font-black rounded-xl hover:bg-slate-800 transition shadow-2xl">
+                ACKNOWLEDGE & DISMISS
+            </button>
+        </div>
+    </div>
+
+    <!-- REPOST / PREVIOUS APPLICATION PROMPT MODAL -->
+    <div id="repostModal" class="hidden fixed inset-0 z-[9990] bg-black/90 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-4 border-blue-500 rounded-2xl w-full max-w-4xl p-8 shadow-2xl flex flex-col max-h-[95vh]">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-4 mb-6">
+                <h2 class="text-3xl font-black text-blue-400 flex items-center gap-3"><i class="fa-solid fa-clock-rotate-left"></i> Previous Application Detected</h2>
+                <button onclick="document.getElementById('repostModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-3xl">✕</button>
+            </div>
+            
+            <div class="bg-amber-900/80 border-2 border-amber-500 text-amber-300 p-4 rounded-xl font-black flex items-center gap-4 mb-6 text-lg">
+                <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                <p>WARNING: A customer can only apply for this product and be a repost TWICE in a 6-month period.</p>
+            </div>
+
+            <div class="space-y-4 overflow-y-auto pr-2 flex-1">
+                <div class="bg-slate-900 p-5 rounded-xl border border-slate-600 shadow-inner">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Prompt 1</h3>
+                    <p class="text-2xl font-bold text-white">"Did you speak to <span class="text-blue-400">{{Insert Partner Name From CRM}}</span>?"</p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl border border-slate-600 shadow-inner">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Prompt 2</h3>
+                    <p class="text-2xl font-bold text-white">"How come you didn't speak to them?"</p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl border border-slate-600 shadow-inner">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Prompt 3</h3>
+                    <p class="text-2xl font-bold text-white">"How come you haven't got this in place still?"</p>
+                </div>
+                <div class="bg-blue-900/40 p-5 rounded-xl border-2 border-blue-500 mt-2">
+                    <h3 class="text-sm font-bold text-blue-300 uppercase tracking-wider mb-2">Final Closing Prompt</h3>
+                    <p class="text-2xl font-medium text-white italic">"The reason I'm reprocessing this application again is <span class="text-blue-300">{{Insert reasons identified in conversation}}</span>"</p>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-slate-700 text-center">
+                <button onclick="document.getElementById('repostModal').classList.add('hidden')" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xl px-10 py-4 rounded-xl shadow-lg transition w-full">
+                    DISMISS PROMPTS
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg font-bold flex items-center space-x-2">
+                <i class="fa-solid fa-bolt"></i> AI Co-Pilot
+            </div>
+            <button id="startAudioBtn" onclick="toggleListening()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2 rounded-lg flex items-center space-x-2 shadow-lg transition">
+                <i class="fa-solid fa-microphone"></i> <span id="startBtnText">Start Listening</span>
+            </button>
+        </div>
+        <button onclick="toggleSimulator()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold shadow transition"><i class="fa-solid fa-flask"></i> Simulator</button>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Column: Transcript, Compliance & CUSTOMER DETAILS -->
+        <div class="w-1/3 border-r border-slate-800 bg-slate-900/50 flex flex-col">
+            
+            <div id="complianceContainer" class="m-4 mb-2 bg-red-950/80 border-4 border-red-500 text-white p-4 rounded-xl text-center dramatic-box shadow-lg shadow-red-500/20 flex-shrink-0">
+                <h2 class="text-xl font-black uppercase text-red-400"><i class="fa-solid fa-record-vinyl animate-pulse"></i> Compliance Required</h2>
+                <p class="text-sm font-bold mt-1 text-slate-200">You must state: <span class="text-white bg-red-600 px-2 py-0.5 rounded">"Calls are recorded"</span></p>
+                <div id="complianceTimer" class="text-5xl font-mono font-black mt-3 text-red-100 tracking-wider">02:00</div>
+            </div>
+
+            <div id="complianceSuccess" class="hidden m-4 mb-2 bg-emerald-900/50 border-2 border-emerald-500 text-emerald-400 p-4 rounded-xl text-center flex-shrink-0">
+                <i class="fa-solid fa-circle-check text-4xl mb-2"></i>
+                <h2 class="text-lg font-bold uppercase">Compliance Verified</h2>
+                <p class="text-xs text-slate-300">Recording statement captured.</p>
+            </div>
+
+            <div class="mx-4 mb-4 bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-lg flex-shrink-0">
+                <h3 class="text-blue-400 font-bold uppercase tracking-wider text-xs mb-3 border-b border-slate-700 pb-2"><i class="fa-solid fa-address-card mr-1"></i> Customer Details</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between border-b border-slate-700/50 pb-1">
+                        <span class="text-slate-400">Company:</span> 
+                        <span class="font-bold text-slate-200 text-right truncate w-2/3" id="crm_company">{{CompanyName}}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700/50 pb-1">
+                        <span class="text-slate-400">Contact:</span> 
+                        <span class="font-bold text-slate-200 text-right truncate w-2/3"><span id="crm_fname">{{First Name}}</span> <span id="crm_lname">{{Last Name}}</span></span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700/50 pb-1">
+                        <span class="text-slate-400">Product:</span> 
+                        <span class="font-bold text-emerald-400 text-right truncate w-2/3" id="crm_product">{{ProductName}}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">App Date:</span> 
+                        <span class="font-bold text-slate-200 text-right truncate w-2/3" id="crm_date">{{ApplicationDate}}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 flex flex-col p-4 pt-0 overflow-hidden">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-3">
+                    <span class="font-bold text-emerald-400 text-sm"><i class="fa-solid fa-bolt"></i> Live Instant Feed</span>
+                    <button onclick="clearTranscript()" class="text-xs text-slate-400 hover:text-white">Clear</button>
+                </div>
+                <div id="transcriptBox" class="flex-1 overflow-y-auto space-y-2 text-sm pr-2 pb-2">
+                    <div class="text-slate-500 italic text-center py-4">Waiting for audio...</div>
+                </div>
+                <div class="mt-2 pt-3 border-t border-slate-700/60 text-blue-400 text-sm font-bold truncate flex items-center gap-2">
+                    <i class="fa-solid fa-wave-square animate-pulse"></i> <span id="interimText">Standby...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Tabs -->
+        <div class="w-2/3 flex flex-col bg-slate-900 p-4 space-y-4 min-h-0">
+            
+            <div class="flex space-x-2 border-b border-slate-800 pb-2 flex-shrink-0 overflow-x-auto">
+                <button onclick="switchTab('objections')" id="tabBtn_objections" class="px-4 py-2.5 rounded-lg text-sm font-bold bg-blue-600 text-white shadow whitespace-nowrap"><i class="fa-solid fa-shield-halved"></i> Objections</button>
+                <button onclick="switchTab('products')" id="tabBtn_products" class="px-4 py-2.5 rounded-lg text-sm font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 whitespace-nowrap"><i class="fa-solid fa-boxes-stacked"></i> Products</button>
+                <button onclick="switchTab('trainer')" id="tabBtn_trainer" class="px-4 py-2.5 rounded-lg text-sm font-bold bg-purple-900/60 border border-purple-700 text-purple-300 hover:bg-purple-800 whitespace-nowrap"><i class="fa-solid fa-graduation-cap"></i> Phrase Trainer</button>
+                <button onclick="switchTab('complaints')" id="tabBtn_complaints" class="px-4 py-2.5 rounded-lg text-sm font-bold bg-red-900/40 text-red-400 border border-red-800 hover:bg-red-800 hover:text-white whitespace-nowrap transition-colors"><i class="fa-solid fa-circle-exclamation"></i> Complaints Procedure</button>
+            </div>
+
+            <!-- TAB: OBJECTIONS -->
+            <div id="tab_objections" class="flex-1 overflow-y-auto space-y-4 pr-2">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
+                    <h2 class="text-xl font-bold text-white mb-4 border-b border-slate-700 pb-2">Objection Handling Battlecards</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div id="objCard_BUSY" class="bg-slate-900 p-4 rounded-lg border border-slate-700 transition duration-300">
+                            <h3 class="text-amber-400 font-bold uppercase mb-2"><i class="fa-solid fa-clock"></i> Busy / No Time</h3>
+                            <div class="editable p-2 rounded text-slate-100 font-medium" contenteditable="true">
+                                "I completely understand you're busy—I'll be extremely brief. I'm calling to verify if your rates were adjusted this quarter."
+                            </div>
+                        </div>
+                        <div id="objCard_NOT_INTERESTED" class="bg-slate-900 p-4 rounded-lg border border-slate-700 transition duration-300">
+                            <h3 class="text-red-400 font-bold uppercase mb-2"><i class="fa-solid fa-ban"></i> Not Interested</h3>
+                            <div class="editable p-2 rounded text-slate-100 font-medium" contenteditable="true">
+                                "Fair enough! Most owners say that before seeing how much they overpay in hidden fees. If we can't beat your rate, we'll pay £50 for your time."
+                            </div>
+                        </div>
+                        <div id="objCard_EMAIL" class="bg-slate-900 p-4 rounded-lg border border-slate-700 transition duration-300">
+                            <h3 class="text-blue-400 font-bold uppercase mb-2"><i class="fa-solid fa-envelope"></i> Send an Email</h3>
+                            <div class="editable p-2 rounded text-slate-100 font-medium" contenteditable="true">
+                                "I'd love to send an email! What's your average monthly volume so I can attach the correct pricing structure?"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: PRODUCTS -->
+            <div id="tab_products" class="flex-1 hidden flex-col space-y-4 min-h-0 overflow-y-auto pr-2">
+                <div class="flex space-x-2 overflow-x-auto pb-2 border-b border-slate-700 flex-shrink-0" id="productNav"></div>
+                
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 flex flex-col flex-shrink-0 mb-4">
+                    <div class="flex justify-between items-start border-b border-slate-700 pb-4 mb-4">
+                        <div>
+                            <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase px-2 py-1 rounded">Product Knowledge</span>
+                            <h2 id="prodTitle" class="text-3xl font-bold text-white mt-2">Product Name</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                            <h4 class="text-sm font-bold text-blue-400 mb-2">Key USPs & Pitch Points <i class="fa-solid fa-pen text-xs text-slate-500 ml-1"></i></h4>
+                            <div id="prodPitch" class="editable text-slate-200 text-sm p-2 bg-slate-800/50 rounded leading-relaxed whitespace-pre-wrap" contenteditable="true">Description goes here</div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                                <h4 class="text-sm font-bold text-amber-400 mb-2">Commercial Criteria <i class="fa-solid fa-pen text-xs text-slate-500 ml-1"></i></h4>
+                                <div id="prodCriteria" class="editable text-slate-300 text-xs p-2 bg-slate-800/50 rounded leading-relaxed whitespace-pre-wrap" contenteditable="true">Criteria goes here</div>
+                            </div>
+                            <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                                <h4 class="text-sm font-bold text-emerald-400 mb-2">Active Partners <i class="fa-solid fa-pen text-xs text-slate-500 ml-1"></i></h4>
+                                <div id="prodPartners" class="editable text-slate-300 text-xs p-2 bg-slate-800/50 rounded leading-relaxed whitespace-pre-wrap font-semibold" contenteditable="true">Partners go here</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: PHRASE TRAINER -->
+            <div id="tab_trainer" class="flex-1 hidden flex-col space-y-4 min-h-0 overflow-y-auto pr-2">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 flex flex-col flex-shrink-0 mb-4">
+                    <div class="border-b border-slate-700 pb-4 mb-6">
+                        <h2 class="text-2xl font-bold text-purple-400"><i class="fa-solid fa-graduation-cap">
